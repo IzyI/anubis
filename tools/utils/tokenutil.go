@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"anubis/core/schemes"
+	"anubis/app/core/schemes"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"

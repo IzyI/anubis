@@ -1,31 +1,31 @@
 package controllers
 
 import (
-	entytes "anubis/api/elements"
-	"anubis/core"
+	entytes "anubis/app/api/entytes"
+	"anubis/app/core"
 	"github.com/gin-gonic/gin"
 )
 
 type ControllerUser struct {
-	user entytes.InfUserReg
+	user entytes.InfUserFlow
 }
 
-func NewControllerUser(user entytes.InfUserReg) *ControllerUser {
+func NewControllerAuth(user entytes.InfUserFlow) *ControllerUser {
 	return &ControllerUser{user: user}
 }
 
 func (s *ControllerUser) HandlerRegPOST(ctx *gin.Context) {
-	core.PostHandler(ctx, s.user.RegUser)
+	core.PostHandler(ctx, s.user.RegUserFlow)
 }
 
 func (s *ControllerUser) HandlerValidSmsPOST(ctx *gin.Context) {
-	core.PostHandler(ctx, s.user.ValidSmsUser)
+	core.PostHandler(ctx, s.user.ValidSmsUserFlow)
 }
 
 func (s *ControllerUser) HandlerLoginPOST(ctx *gin.Context) {
-	core.PostHandler(ctx, s.user.LoginUser)
+	core.PostHandler(ctx, s.user.LoginUserFlow)
 }
 
 func (s *ControllerUser) HandlerRefreshTokenPOST(ctx *gin.Context) {
-	core.PostHandler(ctx, s.user.RefreshTokenUser)
+	core.PostHandler(ctx, s.user.RefreshTokenUserFlow)
 }

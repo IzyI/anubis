@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"anubis/core/schemes"
+	"anubis/app/core/schemes"
 	"anubis/tools/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -18,7 +18,7 @@ func JwtAuthMiddleware(secret string) gin.HandlerFunc {
 			if authorized {
 				var userID, err = utils.ExtractToken(authToken, secret)
 				if err != nil {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, schemes.ShmErrorResponse{
+					c.AbortWithStatusJSON(http.StatusUnauthorized, schemes.ErrorResponse{
 						Code: 97,
 						Err:  "Not find User",
 					})
@@ -29,14 +29,14 @@ func JwtAuthMiddleware(secret string) gin.HandlerFunc {
 				c.Next()
 				return
 			}
-			c.AbortWithStatusJSON(http.StatusUnauthorized, schemes.ShmErrorResponse{
+			c.AbortWithStatusJSON(http.StatusUnauthorized, schemes.ErrorResponse{
 				Code: 98,
 				Err:  "Not authorized",
 			})
 			c.Abort()
 			return
 		}
-		c.AbortWithStatusJSON(http.StatusUnauthorized, schemes.ShmErrorResponse{
+		c.AbortWithStatusJSON(http.StatusUnauthorized, schemes.ErrorResponse{
 			Code: 99,
 			Err:  "Unable to find token in header",
 		})

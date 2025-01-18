@@ -1,10 +1,10 @@
 package main
 
 import (
-	"anubis/api/routes/api_v1"
-	"anubis/core"
-	"anubis/core/helpers"
-	"anubis/core/middlewares"
+	"anubis/app/core"
+	"anubis/app/core/helpers"
+	"anubis/app/core/middlewares"
+	v1 "anubis/app/routes/v1"
 	"anubis/tools/databace/psql"
 	"anubis/tools/utils"
 	"context"
@@ -84,7 +84,7 @@ func main() {
 	* ========================
 	 */
 	app.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
-	api_v1.NewRouteUser(pgStore, app, env)
+	v1.NewRouteUser(pgStore, app, env)
 
 	protectedRouter := app.Group("/check_auth")
 	protectedRouter.Use(middlewares.JwtAuthMiddleware(env.AccessTokenSecret))

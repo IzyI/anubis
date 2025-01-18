@@ -1,7 +1,7 @@
 package core
 
 import (
-	"anubis/core/helpers"
+	"anubis/app/core/helpers"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

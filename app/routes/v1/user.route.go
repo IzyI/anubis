@@ -1,18 +1,18 @@
-package api_v1
+package routes
 
 import (
-	"anubis/api/controllers"
-	"anubis/api/repositories"
-	"anubis/core"
-	"anubis/services"
+	"anubis/app/api/controllers"
+	"anubis/app/api/services"
+	"anubis/app/api/storage"
+	"anubis/app/core"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func NewRouteUser(db *pgxpool.Pool, router *gin.Engine, env core.Env) {
-	repository := repositories.NewRepositoryUser(db)
-	service := services.NewServiceUser(repository, env)
-	handler := controllers.NewControllerUser(service)
+	repositoryPsqlUser := storage.NewRepositoryPsqlUser(db)
+	serviceAuth := services.NewServiceAuth(repositoryPsqlUser, env)
+	handler := controllers.NewControllerAuth(serviceAuth)
 
 	route := router.Group("/auth")
 	//

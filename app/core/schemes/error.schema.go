@@ -8,16 +8,16 @@ type ValidateError struct {
 	Msg   string
 }
 
-type ShmValidateErrorResponse struct {
+type ValidateErrorResponse struct {
 	Code  int             `json:"code"`
 	Error []ValidateError `json:"error"`
 }
 
-type ShmErrorResponse struct {
+type ErrorResponse struct {
 	Code int    `json:"code"`
 	Err  string `json:"error"`
 }
 
-func (e *ShmErrorResponse) Error() string {
+func (e *ErrorResponse) Error() string {
 	return "ERROR: " + e.Err + "(Code " + strconv.Itoa(e.Code) + ")"
 }

@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"anubis/core/schemes"
+	schemes2 "anubis/app/core/schemes"
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
@@ -15,7 +15,7 @@ import (
 )
 
 func APIResponse(ctx *gin.Context, message string, StatusCode int, data interface{}) {
-	jsonResponse := schemes.ShmResponses{
+	jsonResponse := schemes2.Responses{
 		StatusCode: StatusCode,
 		Message:    message,
 		Data:       data,
@@ -59,14 +59,14 @@ func msgForTag(tag string, param string) string {
 func ValidateErrorResponse(ctx *gin.Context, Error error) {
 
 	var ve validator.ValidationErrors
-	var out []schemes.ValidateError
+	var out []schemes2.ValidateError
 	if errors.As(Error, &ve) {
-		out = make([]schemes.ValidateError, len(ve))
+		out = make([]schemes2.ValidateError, len(ve))
 		for i, fe := range ve {
-			out[i] = schemes.ValidateError{Field: fe.Field(), Msg: msgForTag(fe.Tag(), fe.Param())}
+			out[i] = schemes2.ValidateError{Field: fe.Field(), Msg: msgForTag(fe.Tag(), fe.Param())}
 		}
 	} else {
-		err := schemes.ShmErrorResponse{
+		err := schemes2.ErrorResponse{
 			Code: 101,
 			Err:  "Bad json",
 		}
@@ -74,7 +74,7 @@ func ValidateErrorResponse(ctx *gin.Context, Error error) {
 		return
 	}
 
-	err := schemes.ShmValidateErrorResponse{
+	err := schemes2.ValidateErrorResponse{
 		Code:  100,
 		Error: out,
 	}
@@ -82,7 +82,7 @@ func ValidateErrorResponse(ctx *gin.Context, Error error) {
 }
 
 func ErrorResponse(ctx *gin.Context, code int, error string) {
-	err := schemes.ShmErrorResponse{
+	err := schemes2.ErrorResponse{
 		Code: code,
 		Err:  error,
 	}
@@ -92,7 +92,7 @@ func ErrorResponse(ctx *gin.Context, code int, error string) {
 func HandlerError(ctx *gin.Context, err error) {
 	var _ = ctx.Error(err)
 	var pgErr *pgconn.PgError
-	var errResp *schemes.ShmErrorResponse
+	var errResp *schemes2.ErrorResponse
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
 		case "23505":

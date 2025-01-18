@@ -1,22 +1,22 @@
-package repositories
+package storage
 
 import (
-	entytes "anubis/api/elements"
+	"anubis/app/api/entytes"
 	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type RepositoryUser struct {
+type RepositoryPsqlUser struct {
 	db *pgxpool.Pool
 }
 
-func NewRepositoryUser(db *pgxpool.Pool) *RepositoryUser {
-	return &RepositoryUser{db: db}
+func NewRepositoryPsqlUser(db *pgxpool.Pool) *RepositoryPsqlUser {
+	return &RepositoryPsqlUser{db: db}
 }
 
-func (r *RepositoryUser) EntityCreate(u entytes.MdUser) (*entytes.MdUser, error) {
+func (r *RepositoryPsqlUser) CreateUser(u entytes.MdUser) (*entytes.MdUser, error) {
 	var uid uuid.UUID
 	sql := `INSERT INTO users (phone,password_hash)
           VALUES ($1,$2) RETURNING (uuid)`
@@ -32,7 +32,7 @@ func (r *RepositoryUser) EntityCreate(u entytes.MdUser) (*entytes.MdUser, error)
 	return &u, nil
 }
 
-func (r *RepositoryUser) SmsSave(userUuid string, s string) error {
+func (r *RepositoryPsqlUser) SmsSaveUser(userUuid string, s string) error {
 	var uid uuid.UUID
 
 	sql := `UPDATE users  SET sms=($1)
@@ -47,7 +47,7 @@ func (r *RepositoryUser) SmsSave(userUuid string, s string) error {
 	return nil
 }
 
-func (r *RepositoryUser) SmsValid(userUuid string, s string) error {
+func (r *RepositoryPsqlUser) SmsValidUser(userUuid string, s string) error {
 	var uid uuid.UUID
 
 	sql := `UPDATE users  SET verification=true
@@ -62,7 +62,7 @@ func (r *RepositoryUser) SmsValid(userUuid string, s string) error {
 	return nil
 }
 
-func (r *RepositoryUser) LoginUser(phone string) (string, string, error) {
+func (r *RepositoryPsqlUser) LoginUser(phone string) (string, string, error) {
 	var uid uuid.UUID
 	var passwordHash string
 	sql := `SELECT uuid ,password_hash FROM users   WHERE phone=($1) and verification=true`
@@ -76,7 +76,7 @@ func (r *RepositoryUser) LoginUser(phone string) (string, string, error) {
 	return uid.String(), passwordHash, nil
 }
 
-func (r *RepositoryUser) GetUuidUser(uuid string) error {
+func (r *RepositoryPsqlUser) GetUuidUser(uuid string) error {
 	var p string
 	sql := `SELECT phone FROM users   WHERE uuid=($1) and verification=true`
 	rows := r.db.QueryRow(context.Background(), sql, uuid)

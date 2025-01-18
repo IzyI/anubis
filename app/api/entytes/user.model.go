@@ -1,4 +1,4 @@
-package elements
+package entytes
 
 type MdUser struct {
 	Uuid         string `json:"uuid"`

@@ -1,7 +1,7 @@
 package core
 
 import (
-	"anubis/core/middlewares"
+	"anubis/app/core/middlewares"
 	"fmt"
 	"io"
 	"time"
