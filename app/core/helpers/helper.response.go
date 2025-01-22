@@ -2,16 +2,17 @@ package helpers
 
 import (
 	schemes2 "anubis/app/core/schemes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgconn"
 	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/gin-gonic/gin"
 )
 
 func APIResponse(ctx *gin.Context, message string, StatusCode int, data interface{}) {
@@ -55,16 +56,52 @@ func msgForTag(tag string, param string) string {
 	}
 	return ""
 }
+func getJSONFieldName(v interface{}, fieldName string) string {
+	t := reflect.TypeOf(v)
+	field, found := t.FieldByName(fieldName)
+	if !found {
+		return fieldName // Возвращаем имя поля как есть, если не нашли
+	}
+	jsonTag := field.Tag.Get("json")
+	if jsonTag == "" {
+		return fieldName
+	}
+	return jsonTag
+}
 
-func ValidateErrorResponse(ctx *gin.Context, Error error) {
+func ValidateErrorResponse(ctx *gin.Context, body interface{}, Error error) {
 
 	var ve validator.ValidationErrors
-	var out []schemes2.ValidateError
+	var jsonErr *json.UnmarshalTypeError
 	if errors.As(Error, &ve) {
+		var out []schemes2.ValidateError
 		out = make([]schemes2.ValidateError, len(ve))
+
 		for i, fe := range ve {
-			out[i] = schemes2.ValidateError{Field: fe.Field(), Msg: msgForTag(fe.Tag(), fe.Param())}
+			jsonFieldName := getJSONFieldName(body, fe.StructField())
+			out[i] = schemes2.ValidateError{Field: jsonFieldName, Msg: msgForTag(fe.Tag(), fe.Param())}
 		}
+
+		err := schemes2.ValidateErrorResponse{
+			Code:  100,
+			Error: out,
+		}
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	} else if errors.As(Error, &jsonErr) {
+		out := []schemes2.ValidateError{
+			{
+				Field: jsonErr.Field,
+				Msg:   fmt.Sprintf("Error in the '%s': field is expected type '%s'", jsonErr.Field, jsonErr.Type),
+			},
+		}
+
+		err := schemes2.ValidateErrorResponse{
+			Code:  100,
+			Error: out,
+		}
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
 	} else {
 		err := schemes2.ErrorResponse{
 			Code: 101,
@@ -74,11 +111,6 @@ func ValidateErrorResponse(ctx *gin.Context, Error error) {
 		return
 	}
 
-	err := schemes2.ValidateErrorResponse{
-		Code:  100,
-		Error: out,
-	}
-	ctx.AbortWithStatusJSON(http.StatusBadRequest, err)
 }
 
 func ErrorResponse(ctx *gin.Context, code int, error string) {

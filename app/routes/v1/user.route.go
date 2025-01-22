@@ -9,9 +9,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewRouteUser(db *pgxpool.Pool, router *gin.Engine, env core.Env) {
+func NewRouteUser(db *pgxpool.Pool, router *gin.Engine, config core.ServiceConfig) {
+	repositoryPsqlAuth := storage.NewRepositoryPsqlAuth(db)
 	repositoryPsqlUser := storage.NewRepositoryPsqlUser(db)
-	serviceAuth := services.NewServiceAuth(repositoryPsqlUser, env)
+	serviceAuth := services.NewServiceAuth(repositoryPsqlUser, repositoryPsqlAuth, config)
 	handler := controllers.NewControllerAuth(serviceAuth)
 
 	route := router.Group("/auth")

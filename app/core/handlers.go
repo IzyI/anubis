@@ -9,7 +9,7 @@ import (
 func PostHandler[T any, R any](ctx *gin.Context, processFunc func(T) (R, error)) {
 	var body T
 	if err := ctx.ShouldBindJSON(&body); err != nil {
-		helpers.ValidateErrorResponse(ctx, err)
+		helpers.ValidateErrorResponse(ctx, body, err)
 		return
 	}
 
