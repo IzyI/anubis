@@ -1,31 +1,31 @@
 package controllers
 
 import (
-	entytes "anubis/app/api/entytes"
-	"anubis/app/core"
+	entytes "anubis/app/api/entities"
+	"anubis/app/core/handlers"
 	"github.com/gin-gonic/gin"
 )
 
-type ControllerUser struct {
-	user entytes.InfUserFlow
+type ControllerAuth struct {
+	authUC entytes.AuthUseCase
 }
 
-func NewControllerAuth(user entytes.InfUserFlow) *ControllerUser {
-	return &ControllerUser{user: user}
+func NewControllerAuth(authUC entytes.AuthUseCase) *ControllerAuth {
+	return &ControllerAuth{authUC: authUC}
 }
 
-func (s *ControllerUser) HandlerRegPOST(ctx *gin.Context) {
-	core.PostHandler(ctx, s.user.RegUserFlow)
+func (s *ControllerAuth) HandlerRegPOST(ctx *gin.Context) {
+	handlers.PostHandler(ctx, s.authUC.RegUserFlow)
 }
 
-func (s *ControllerUser) HandlerValidSmsPOST(ctx *gin.Context) {
-	core.PostHandler(ctx, s.user.ValidSmsUserFlow)
+func (s *ControllerAuth) HandlerValidSmsPOST(ctx *gin.Context) {
+	handlers.PostHandler(ctx, s.authUC.ValidSmsUserFlow)
 }
 
-func (s *ControllerUser) HandlerLoginPOST(ctx *gin.Context) {
-	core.PostHandler(ctx, s.user.LoginUserFlow)
+func (s *ControllerAuth) HandlerLoginPOST(ctx *gin.Context) {
+	handlers.PostHandler(ctx, s.authUC.LoginUserFlow)
 }
 
-func (s *ControllerUser) HandlerRefreshTokenPOST(ctx *gin.Context) {
-	core.PostHandler(ctx, s.user.RefreshTokenUserFlow)
+func (s *ControllerAuth) HandlerRefreshTokenPOST(ctx *gin.Context) {
+	handlers.PostHandler(ctx, s.authUC.RefreshTokenUserFlow)
 }

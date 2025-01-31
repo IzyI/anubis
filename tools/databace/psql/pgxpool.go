@@ -3,24 +3,10 @@ package psql
 import (
 	"context"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"time"
 )
-
-type Client interface {
-	Close()
-	Acquire(ctx context.Context) (*pgxpool.Conn, error)
-	AcquireFunc(ctx context.Context, f func(*pgxpool.Conn) error) error
-	AcquireAllIdle(ctx context.Context) []*pgxpool.Conn
-	Stat() *pgxpool.Stat
-	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
-	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
-	Begin(ctx context.Context) (pgx.Tx, error)
-	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
-}
 
 func NewClient(
 	ctx context.Context,
@@ -32,7 +18,7 @@ func NewClient(
 	// check the configs
 	pgxCfg, parseConfigErr := pgxpool.ParseConfig(databaseUrl)
 	if parseConfigErr != nil {
-		log.Printf("Unable to parse config: %v\n", parseConfigErr)
+		log.Printf("Unable to parse settings: %v\n", parseConfigErr)
 		return nil, parseConfigErr
 	}
 	// a special mod that disables caching and all sorts of perks.

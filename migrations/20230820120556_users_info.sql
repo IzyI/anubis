@@ -6,10 +6,9 @@ SELECT 'up SQL query';
 
 CREATE TABLE users_info
 (
-    user_uuid    uuid REFERENCES users (uuid),
-    email   varchar,
-    name   varchar,
-    fio   varchar,
+    user_uuid uuid not null REFERENCES users (uuid),
+    email     varchar,
+    nickname  varchar,
     CONSTRAINT users_info_pk PRIMARY KEY (user_uuid, email)
 );
 
@@ -17,7 +16,6 @@ CREATE TABLE users_info
 -- +goose StatementBegin
 SELECT 'down SQL query';
 -- +goose StatementEnd
-
 
 
 drop table if exists users_info;
