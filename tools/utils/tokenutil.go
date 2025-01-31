@@ -4,12 +4,13 @@ import (
 	"anubis/app/core/schemes"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"time"
 )
 
-func CreateAccessToken(uuid, secret string, expiry int) (accessToken string, err error) {
+func CreateAccessToken(uuid uuid.UUID, secret string, expiry int) (accessToken string, err error) {
 	claims := &schemes.JwtCustomClaims{
-		ID: uuid,
+		ID: uuid.String(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expiry))),
 		},
@@ -22,9 +23,9 @@ func CreateAccessToken(uuid, secret string, expiry int) (accessToken string, err
 	return t, err
 }
 
-func CreateRefreshToken(uuid, secret string, expiry int) (refreshToken string, err error) {
+func CreateRefreshToken(uuid uuid.UUID, secret string, expiry int) (refreshToken string, err error) {
 	claims := &schemes.JwtCustomRefreshClaims{
-		ID: uuid,
+		ID: uuid.String(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expiry))),
 		},

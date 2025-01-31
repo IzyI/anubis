@@ -1,8 +1,8 @@
-package services
+package usecase
 
 //
 //import (
-//	"anubis/app/api/entytes"
+//	"anubis/app/api/entities"
 //	schemesAuth "anubis/app/api/schemes"
 //	"anubis/app/api/storage"
 //	"anubis/app/core"
@@ -14,7 +14,7 @@ package services
 //)
 //
 //type ServiceUser struct {
-//	user entytes.InfUserDB
+//	user entities.InfUserDB
 //	env  core.Env
 //}
 //
@@ -29,7 +29,7 @@ package services
 //
 //}
 //func (s *ServiceUser) RegUserFlow(input schemesAuth.ValidUserReg) (schemesAuth.AnswerUserReg, error) {
-//	var t entytes.MdUser
+//	var t entities.MdUser
 //	var user schemesAuth.AnswerUserReg
 //	//TODO.MD:  понять как можно сделать защиту от большого количества отправки смс
 //	t.Phone = input.Phone

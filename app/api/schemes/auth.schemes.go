@@ -2,12 +2,16 @@ package schemes
 
 type ValidUserReg struct {
 	Phone    string `json:"phone"  binding:"required,phone=8,e164"`
-	Password string `json:"password"  binding:"required"`
+	Password string `json:"password"  binding:"required,min=8,max=64,containsany=!@#$%^&*"`
 	Captcha  string `json:"captcha"  binding:"required"`
 }
 
 type AnswerUserReg struct {
-	Uuid string `json:"uuid"`
+	SmsId string `json:"sms_id"`
+}
+type ValidSms struct {
+	SmsId   string `json:"sms_id" binding:"omitempty,uuid"`
+	SmsCode string `json:"sms_code"`
 }
 
 type ValidRefresh struct {
@@ -16,11 +20,6 @@ type ValidRefresh struct {
 type AnswerToken struct {
 	RefreshToken string `json:"refresh_token"`
 	AccessToken  string `json:"access_token"`
-}
-
-type ValidSms struct {
-	Uuid string `json:"uuid" binding:"omitempty,uuid"`
-	Sms  string `json:"sms"`
 }
 
 type UserInfo struct {

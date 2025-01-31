@@ -5,16 +5,17 @@ SELECT 'up SQL query';
 
 create table phone_auth
 (
-    phone bigint not null,
-    country_code int not null,
-    password_hash varchar not null,
-    updated_at timestamptz,
-    created_at timestamptz not null default clock_timestamp(),
-    verification bool default False,
-    user_uuid    uuid REFERENCES users (uuid)
+    phone         bigint      not null,
+    country_code  int         not null,
+    password_hash varchar     not null,
+    created_at    timestamptz not null default clock_timestamp(),
+    verification  bool        not null default False,
+    user_uuid     uuid        not null REFERENCES users (uuid)
 );
 
-create unique index user_phone_uniq_idx ON phone_auth(phone);
+CREATE UNIQUE INDEX user_phone_uniq_idx ON phone_auth (phone);
+
+
 
 -- +goose Down
 -- +goose StatementBegin

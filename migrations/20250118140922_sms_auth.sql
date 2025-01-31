@@ -4,9 +4,9 @@ SELECT 'up SQL query';
 -- +goose StatementEnd
 CREATE TABLE sms_auth
 (
-    id          serial primary key,
-    user_uuid   uuid REFERENCES users (uuid),
-    phone       int         not null,
+    sms_uuid    uuid                 default gen_random_uuid() primary key,
+    user_uuid   uuid        not null REFERENCES users (uuid),
+    phone       bigint      not null,
     sms_code    varchar     not null,
     sms_service varchar     not null,
     id_send     varchar     not null,

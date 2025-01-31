@@ -14,10 +14,20 @@ type ValidateErrorResponse struct {
 }
 
 type ErrorResponse struct {
+	Code    int
+	Err     string
+	ErrBase error
+}
+
+func (e *HTTPError) Error() string {
+	return "#" + e.Err + "(Code " + strconv.Itoa(e.Code) + ")\n"
+}
+
+type HTTPError struct {
 	Code int    `json:"code"`
 	Err  string `json:"error"`
 }
 
 func (e *ErrorResponse) Error() string {
-	return "ERROR: " + e.Err + "(Code " + strconv.Itoa(e.Code) + ")"
+	return "" + e.Err + "(Code " + strconv.Itoa(e.Code) + ")  // " + e.ErrBase.Error()
 }

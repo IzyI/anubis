@@ -1,17 +1,13 @@
-package core
+package helpers
 
 import (
 	"anubis/app/core/middlewares"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"io"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
-// GetLoggerConfig return gin.LoggerConfig which will write the logs to specified io.Writer with given gin.LogFormatter.
-// By default gin.DefaultWriter = os.Stdout
-// reference: https://github.com/gin-gonic/gin#custom-log-format
 func GetLoggerConfig(formatter gin.LogFormatter, output io.Writer, skipPaths []string) gin.LoggerConfig {
 	if formatter == nil {
 		formatter = GetDefaultLogFormatterWithRequestID()
@@ -23,11 +19,10 @@ func GetLoggerConfig(formatter gin.LogFormatter, output io.Writer, skipPaths []s
 	}
 }
 
-// GetDefaultLogFormatterWithRequestID returns gin.LogFormatter with 'RequestID'
 func GetDefaultLogFormatterWithRequestID() gin.LogFormatter {
 	return func(param gin.LogFormatterParams) string {
 		return fmt.Sprintf(
-			"[GIN-debug] %s | %s | %s | %s | %s | %3d | %s | %s | %s\n",
+			"[GIN] %s | %s | %s | %s | %s | %3d | %s | %s | %s",
 			param.Method,
 			param.TimeStamp.Format(time.RFC3339),
 			param.Request.Header.Get(middlewares.XRequestIDKey),
@@ -41,8 +36,8 @@ func GetDefaultLogFormatterWithRequestID() gin.LogFormatter {
 	}
 }
 
-func LogDebag(ctx *gin.Context, s string) {
-	fmt.Printf("[GIN-debug] %s | %s | %s | %s | %s | %s\n",
+func LogDebug(ctx *gin.Context, s string) {
+	fmt.Printf("[GIN-error] %s | %s | %s | %s | %s | %s",
 		ctx.Request.Method,
 		time.Now().UTC(),
 		ctx.Request.Header.Get(middlewares.XRequestIDKey),

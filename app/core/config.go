@@ -1,5 +1,8 @@
 package core
 
+import "log"
+import "github.com/spf13/viper"
+
 type ServiceConfig struct {
 	AppIp              string `mapstructure:"APP_IP"`
 	AppEnv             string `mapstructure:"APP_ENV"`
@@ -16,4 +19,31 @@ type ServiceConfig struct {
 		Phone []string `mapstructure:"phone"`
 		OAuth []string `mapstructure:"oauth"`
 	} `mapstructure:"server"`
+}
+
+func (s *ServiceConfig) ReadConfig(pathEnv string, pathyaml string) {
+	viper.SetConfigFile(pathEnv)
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal("ENV ERROR = ", err)
+	}
+
+	err = viper.Unmarshal(&s)
+	if err != nil {
+		log.Fatal("Environment can't be loaded: ", err)
+	}
+
+	viper.SetConfigFile(pathyaml)
+
+	err = viper.ReadInConfig()
+	if err != nil {
+		log.Fatal("YAML ERROR = ", err)
+	}
+
+	err = viper.Unmarshal(&s)
+	if err != nil {
+		log.Fatal("Yaml can't be loaded: ", err)
+	}
+
 }
