@@ -1,16 +1,16 @@
 package controllers
 
 import (
-	entytes "anubis/app/api/entities"
+	"anubis/app/api/interfaces"
 	"anubis/app/core/handlers"
 	"github.com/gin-gonic/gin"
 )
 
 type ControllerAuth struct {
-	authUC entytes.AuthUseCase
+	authUC interfaces.AuthUseCase
 }
 
-func NewControllerAuth(authUC entytes.AuthUseCase) *ControllerAuth {
+func NewControllerAuth(authUC interfaces.AuthUseCase) *ControllerAuth {
 	return &ControllerAuth{authUC: authUC}
 }
 
@@ -23,9 +23,10 @@ func (s *ControllerAuth) HandlerValidSmsPOST(ctx *gin.Context) {
 }
 
 func (s *ControllerAuth) HandlerLoginPOST(ctx *gin.Context) {
-	handlers.PostHandler(ctx, s.authUC.LoginUserFlow)
+	handlers.PostHandler(ctx, s.authUC.PhoneValidUserReg)
 }
 
-func (s *ControllerAuth) HandlerRefreshTokenPOST(ctx *gin.Context) {
-	handlers.PostHandler(ctx, s.authUC.RefreshTokenUserFlow)
-}
+//
+//func (s *ControllerAuth) HandlerRefreshTokenPOST(ctx *gin.Context) {
+//	handlers.PostHandler(ctx, s.authUC.RefreshTokenUserFlow)
+//}

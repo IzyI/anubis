@@ -1,4 +1,4 @@
-package helpers
+package common
 
 import (
 	schemes2 "anubis/app/core/schemes"
@@ -7,15 +7,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5/pgconn"
+	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
-	"strings"
 )
 
-func APIResponse(ctx *gin.Context, message string, StatusCode int, data interface{}) {
+func APIResponse(ctx *gin.Context, StatusCode int, data interface{}) {
 	jsonResponse := schemes2.Responses{
 		StatusCode: StatusCode,
-		Message:    message,
 		Data:       data,
 	}
 	ctx.JSON(StatusCode, jsonResponse)
@@ -30,16 +28,19 @@ func ErrorResponse(ctx *gin.Context, code int, error string) {
 }
 
 func HandlerError(ctx *gin.Context, err error) {
+
 	var _ = ctx.Error(err)
-	var pgErr *pgconn.PgError
+	var mongoErr mongo.WriteException
 	var errResp *schemes2.ErrorResponse
 
-	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
-		case "23505":
-			ErrorResponse(ctx, 103, strings.ToUpper(pgErr.TableName)+" is already exists")
-		default:
-			ErrorResponse(ctx, 102, "Error dataBase")
+	if errors.As(err, &mongoErr) {
+		for _, writeErr := range mongoErr.WriteErrors {
+			switch writeErr.Code {
+			case 11000: // Duplicate key error code
+				ErrorResponse(ctx, 103, "Document already exists")
+			default:
+				ErrorResponse(ctx, 102, "Database error")
+			}
 		}
 	} else if errors.As(err, &errResp) {
 		ErrorResponse(ctx, errResp.Code, errResp.Err)
@@ -49,7 +50,6 @@ func HandlerError(ctx *gin.Context, err error) {
 	}
 }
 func ValidateErrorResponse(ctx *gin.Context, body interface{}, Error error) {
-
 	var ve validator.ValidationErrors
 	var jsonErr *json.UnmarshalTypeError
 	if errors.As(Error, &ve) {

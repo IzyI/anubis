@@ -2,7 +2,7 @@ package usecase
 
 //
 //import (
-//	"anubis/app/api/entities"
+//	"anubis/app/api/entitiesDB"
 //	schemesAuth "anubis/app/api/schemes"
 //	"anubis/app/api/storage"
 //	"anubis/app/core"
@@ -14,11 +14,11 @@ package usecase
 //)
 //
 //type ServiceUser struct {
-//	user entities.InfUserDB
+//	user entitiesDB.InfUserDB
 //	env  core.Env
 //}
 //
-//func NewServiceAuth(e *storage.RepositoryPsqlUser, env core.Env) *ServiceUser {
+//func NewServiceAuth(e *storage.RepositoryMongoUser, env core.Env) *ServiceUser {
 //	return &ServiceUser{user: e, env: env}
 //}
 //
@@ -28,8 +28,8 @@ package usecase
 //	return nil
 //
 //}
-//func (s *ServiceUser) RegUserFlow(input schemesAuth.ValidUserReg) (schemesAuth.AnswerUserReg, error) {
-//	var t entities.MdUser
+//func (s *ServiceUser) RegUserFlow(input schemesAuth.PhoneValidUserReg) (schemesAuth.AnswerUserReg, error) {
+//	var t entitiesDB.MdUser
 //	var user schemesAuth.AnswerUserReg
 //	//TODO.MD:  понять как можно сделать защиту от большого количества отправки смс
 //	t.Phone = input.Phone
@@ -57,7 +57,7 @@ package usecase
 //	err := s.user.SmsValidUser(input.Uuid, input.Sms)
 //	if err != nil {
 //		if strings.Contains(err.Error(), "no rows") {
-//			return user, &schemes.ErrorResponse{Code: 104, Err: "User with sms-code not found"}
+//			return user, &schemes.ErrorResponse{Code: 105, Err: "User with sms-code not found"}
 //		}
 //		return user, err
 //	}
@@ -65,19 +65,19 @@ package usecase
 //	return user, nil
 //}
 //
-//func (s *ServiceUser) LoginUserFlow(input schemesAuth.ValidUserReg) (schemesAuth.AnswerToken, error) {
+//func (s *ServiceUser) PhonePhoneValidUserReg(input schemesAuth.PhoneValidUserReg) (schemesAuth.AnswerToken, error) {
 //	var token schemesAuth.AnswerToken
 //	uuid, hashedPassword, err := s.user.LoginUser(input.Phone)
 //	if err != nil {
 //		if strings.Contains(err.Error(), "no rows") {
-//			return token, &schemes.ErrorResponse{Code: 104, Err: "User not found"}
+//			return token, &schemes.ErrorResponse{Code: 105, Err: "User not found"}
 //		}
 //		return token, err
 //	}
 //
 //	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(input.Password))
 //	if err != nil {
-//		return token, &schemes.ErrorResponse{Code: 104, Err: "Invalid username or password"}
+//		return token, &schemes.ErrorResponse{Code: 105, Err: "Invalid username or password"}
 //	}
 //
 //	accessToken, err := utils.CreateAccessToken(uuid, s.env.AccessTokenSecret, s.env.AccessTokenHour)
@@ -110,7 +110,7 @@ package usecase
 //
 //	err = s.user.GetUuidUser(userID)
 //	if err != nil {
-//		return token, &schemes.ErrorResponse{Code: 104, Err: "User not found"}
+//		return token, &schemes.ErrorResponse{Code: 105, Err: "User not found"}
 //	}
 //
 //	accessToken, err := utils.CreateAccessToken(userID, s.env.AccessTokenSecret, s.env.AccessTokenHour)
