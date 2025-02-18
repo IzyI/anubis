@@ -35,6 +35,10 @@ func msgForTag(fe validator.FieldError) string {
 		return "Invalid phone number, it should be in E.164 format"
 	case "len":
 		return "Invalid len"
+	case "lowercase":
+		return "Only lowercase"
+	case "alpha":
+		return "Only Latin letters are allowed."
 	case "startswith":
 		return "Invalid startswith"
 	case "min":

@@ -87,8 +87,13 @@ func main() {
 	* Initialize All Route
 	* ========================
 	 */
+
+	// Первая группа маршрутов для версии 1
+
 	app.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
-	v1.NewRouteUser(database, app, config)
+	auth := app.Group("/auth")
+	v1.NewRoutePhoneAuth(database, auth, config)
+	v1.NewRouteToken(database, auth, config)
 
 	protectedRouter := app.Group("/check_auth")
 	protectedRouter.Use(middlewares.JwtAuthMiddleware(config))

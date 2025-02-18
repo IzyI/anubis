@@ -9,21 +9,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func NewRouteUser(db *mongo.Client, router *gin.Engine, config core.ServiceConfig) {
+func NewRoutePhoneAuth(db *mongo.Client, app *gin.RouterGroup, config core.ServiceConfig) {
 	repositoryMongoAuth := storage.NewRepositoryMongoAuthPhone(db)
 	repositoryMongoUser := storage.NewRepositoryMongoUser(db)
 	repositoryMongoProject := storage.NewRepositoryMongoProject(db)
 	serviceAuth := usecase.NewServiceAuth(repositoryMongoUser, repositoryMongoProject, repositoryMongoAuth, config)
 	handler := controllers.NewControllerAuth(serviceAuth)
 
-	route := router.Group("/auth")
+	route := app.Group("/phone")
 	//
 	//route.Use(middlewares.AuthToken())
 	//route.Use(middlewares.AuthRole(map[string]bool{"admin": true, "merchant": true}))
 	//
 	route.POST("/reg", handler.HandlerRegPOST)
-	route.POST("/valid", handler.HandlerValidSmsPOST)
-	route.POST("/login_phone", handler.HandlerLoginPOST)
+	route.POST("/sms", handler.HandlerValidSmsPOST)
+	route.POST("/login", handler.HandlerLoginPOST)
 	//route.POST("/refresh", handler.HandlerRefreshTokenPOST)
 
 	//route.GET("/result/:id", handler.HandlerResult)

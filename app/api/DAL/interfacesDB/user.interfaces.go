@@ -7,5 +7,14 @@ import (
 
 type UserRepository interface {
 	CreateUser(domain string, user *entitiesDB.MdUser) error
-	GetGroupUser(service string, domain string, userID primitive.ObjectID) (map[string]string, error)
+	CheckOldAndUpdateSession(service string, userSession *entitiesDB.MdUsersSession) error
+	DeactivateOldAndCreateSession(service string, userSession *entitiesDB.MdUsersSession) error
+	DeactivateUserSessionsByDomain(service string, userSession *entitiesDB.MdUsersSession) error
+	DeactivateUserSessionsByTokenFamily(service string, idTokenFamily primitive.ObjectID) error
+	GetUsersSessionByID(service string, id primitive.ObjectID, userSession *entitiesDB.MdUsersSession) error
+	CreateTokenFamily(service string, tokenFamily *entitiesDB.MdTokenFamily) error
+	UpdateSessionsByID(service string, userSession *entitiesDB.MdUsersSession) error
+	InsertUsersSession(service string, userSession *entitiesDB.MdUsersSession) error
+	DeleteSessionsByID(service string, userSession *entitiesDB.MdUsersSession) error
+	UserSessionsSetActive(service string, userSession *entitiesDB.MdUsersSession, active bool) error
 }

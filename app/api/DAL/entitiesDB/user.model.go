@@ -2,6 +2,7 @@ package entitiesDB
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 type MdUser struct {
@@ -9,22 +10,23 @@ type MdUser struct {
 	Nickname string             `bson:"nickname,omitempty"`
 }
 
-//type MdUsersSession struct {
-//	Ip           netip.Addr
-//	Uuid         pgtype.UUID
-//	IDDevice     string
-//	Type         string
-//	Revoked      bool
-//	RefreshToken string
-//	UserUuid     pgtype.UUID
-//	IDService    int32
-//}
+type MdUsersSession struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	UserID     primitive.ObjectID `bson:"user_id"`
+	Domain     string             `bson:"domain"`
+	DeviceId   string             `bson:"device_id"`
+	HashToken  string             `bson:"hash_token"`
+	DeviceType string             `bson:"device_type"` // Идентификатор сервиса
+	CreatedAt  time.Time          `bson:"created_at"`
+	ExpiresAt  time.Time          `bson:"expires_at"`
+	IP         string             `bson:"ip"`
+	IsActive   bool               `bson:"is_active"`
+}
 
-type MdUsersGroup struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UserID    primitive.ObjectID `bson:"user_id"`
-	GroupName string             `bson:"group_name"`
-	Owner     bool               `bson:"owner"`
-	Role      string             `bson:"role"`
-	Domain    string             `bson:"domain"`
+type MdTokenFamily struct {
+	ID            primitive.ObjectID `bson:"_id,omitempty"`
+	UserID        primitive.ObjectID `bson:"user_id"`
+	IsCompromised bool               `bson:"is_compromised"`
+	CreatedAt     time.Time          `bson:"created_at"`
+	CompromisedAt time.Time          `bson:"compromised_at"`
 }

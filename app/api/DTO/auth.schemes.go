@@ -1,4 +1,4 @@
-package schemes
+package DTO
 
 type PhoneValidUserReg struct {
 	Domain   string `json:"domain"  binding:"required,min=3,max=64"`
@@ -17,13 +17,24 @@ type ValidSms struct {
 	SmsCode string `json:"sms_code" binding:"required"`
 }
 
-type ValidRefresh struct {
+type AnswerRegToken struct {
+	RefreshToken string            `json:"refresh_token"`
+	ListProjects map[string]string `json:"list_projects"`
+}
+
+type RefreshTokenProjectI struct {
+	Domain       string `json:"domain"  binding:"required,lowercase,alpha,min=3,max=64"`
+	DeviceId     string `json:"device_id"  binding:"required,min=12,max=64"`
 	RefreshToken string `json:"refresh_token" binding:"required"`
+	ProjectID    string `json:"project_id"  binding:"required,min=23,max=25"`
 }
-type RegAnswerToken struct {
-	AccessToken string            `json:"access_token"`
-	GroupId     map[string]string `json:"group_id"`
+
+type Logout struct {
+	Domain       string `json:"domain"  binding:"required,lowercase,alpha,min=3,max=64"`
+	RefreshToken string `json:"refresh_token" binding:"required"`
+	All          bool   `json:"all" binding:"required"`
 }
+
 type AnswerToken struct {
 	RefreshToken string `json:"refresh_token"`
 	AccessToken  string `json:"access_token"`

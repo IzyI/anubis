@@ -36,7 +36,8 @@ func JwtAuthMiddleware(config core.ServiceConfig) gin.HandlerFunc {
 		// Validate the token
 		authorized, _ := utils.IsAuthorized(authToken, config.AccessTokenSecret)
 		if authorized {
-			userID, err := utils.ExtractToken(authToken, config.AccessTokenSecret)
+			var refreshClaims utils.RefreshClaims
+			err := utils.ExtractToken(authToken, config.AccessTokenSecret, &refreshClaims)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, schemes.HTTPError{
 					Code: 97,
@@ -45,8 +46,8 @@ func JwtAuthMiddleware(config core.ServiceConfig) gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			c.Set(UserIDKey, userID)
-			c.Request.Header.Set(UserIDKey, userID)
+			c.Set(UserIDKey, refreshClaims.ID)
+			c.Request.Header.Set(UserIDKey, refreshClaims.ID)
 			c.Next()
 			return
 		}

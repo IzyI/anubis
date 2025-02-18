@@ -4,9 +4,10 @@ import (
 	"anubis/app/api/DAL/entitiesDB"
 	"anubis/app/api/DAL/interfacesDB"
 	"anubis/app/api/DAL/storage"
+	"anubis/app/api/DTO"
 	"anubis/app/api/helpers"
-	schemesAuth "anubis/app/api/schemes"
 	"anubis/app/core"
+	"anubis/app/core/common"
 	"anubis/app/core/schemes"
 	"anubis/tools/providers/sms"
 	"anubis/tools/utils"
@@ -39,19 +40,22 @@ func NewServiceAuth(
 	}
 }
 
-func (s *ServiceAuth) RegUserFlow(ctx *gin.Context, input schemesAuth.PhoneValidUserReg) (schemesAuth.AnswerUserReg, error) {
-	var answer schemesAuth.AnswerUserReg
+func (s *ServiceAuth) RegUserFlow(ctx *gin.Context, input DTO.PhoneValidUserReg) (DTO.AnswerUserReg, error) {
+	//TODO.MD:  нет проверки КАПЧИ
+	var answer DTO.AnswerUserReg
+
 	service, err := helpers.CheckDomain(s.config, input.Domain)
 	if err != nil {
 		return answer, err
 	}
-	//TODO.MD:  нет проверки КАПЧИ
 
+	//
 	var phone = &entitiesDB.MdPhoneAuth{}
 	err = helpers.FillPhoneReg(phone, input)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad phone", ErrBase: err}
 	}
+
 	err = s.ath.GetPhone(service, phone)
 	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad phone for user", ErrBase: err}
@@ -65,6 +69,7 @@ func (s *ServiceAuth) RegUserFlow(ctx *gin.Context, input schemesAuth.PhoneValid
 	} else {
 		user.Nickname = "name_" + utils.RandStringBytes(10)
 	}
+
 	if phone.UserID.IsZero() {
 		err = s.usr.CreateUser(service, &user)
 		if err != nil {
@@ -73,7 +78,6 @@ func (s *ServiceAuth) RegUserFlow(ctx *gin.Context, input schemesAuth.PhoneValid
 		phone.UserID = user.ID
 	}
 
-	//TODO.MD:  установить триггер на удаление старого юзера phone.UserUuid вот в чем вопрос
 	err = s.ath.SavePhone(service, phone)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 109, Err: "Not save phone", ErrBase: err}
@@ -95,21 +99,24 @@ func (s *ServiceAuth) RegUserFlow(ctx *gin.Context, input schemesAuth.PhoneValid
 	return answer, nil
 }
 
-func (s *ServiceAuth) ValidSmsUserFlow(ctx *gin.Context, input schemesAuth.ValidSms) (schemesAuth.RegAnswerToken, error) {
-	var answer schemesAuth.RegAnswerToken
+func (s *ServiceAuth) ValidSmsUserFlow(ctx *gin.Context, input DTO.ValidSms) (DTO.AnswerRegToken, error) {
+	var answer DTO.AnswerRegToken
+
 	service, err := helpers.CheckDomain(s.config, input.Domain)
 	if err != nil {
 		return answer, err
 	}
+
 	objectID, err := primitive.ObjectIDFromHex(input.SmsId)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad SmsId", ErrBase: err}
 	}
-	objectIDTimestamp := objectID.Timestamp()
+
 	tenMinutesAgo := time.Now().Add(-10 * time.Minute)
-	if !objectIDTimestamp.After(tenMinutesAgo) {
+	if !objectID.Timestamp().After(tenMinutesAgo) {
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "The time for the SMS code has expired.", ErrBase: nil}
 	}
+
 	phoneNum, err := s.ath.SmsValidUser(service, objectID, input.SmsCode)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -117,6 +124,7 @@ func (s *ServiceAuth) ValidSmsUserFlow(ctx *gin.Context, input schemesAuth.Valid
 		}
 		return answer, err
 	}
+
 	var phone = &entitiesDB.MdPhoneAuth{}
 	phone.Phone = phoneNum
 	err = s.ath.GetPhone(service, phone)
@@ -131,32 +139,60 @@ func (s *ServiceAuth) ValidSmsUserFlow(ctx *gin.Context, input schemesAuth.Valid
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 109, Err: "Not save verification", ErrBase: err}
 	}
-	var tokens schemesAuth.AnswerToken
-	err = helpers.FillJWTTokens(&tokens, phone.UserID.Hex(), []string{}, s.config, 18, 1)
+
+	projectMap, err := s.pr.GetProjectsListByUser(service, input.Domain, phone.UserID)
+	if err != nil {
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Couldn't create a project", ErrBase: err}
+	}
+
+	expiresAt := time.Now().Add(time.Minute * time.Duration(20))
+	usersSession := entitiesDB.MdUsersSession{
+		DeviceId:   "_",
+		DeviceType: common.GetDeviceType(ctx),
+		UserID:     phone.UserID,
+		Domain:     "*******",
+		CreatedAt:  time.Now(),
+		ExpiresAt:  expiresAt,
+		IP:         common.GetClientIP(ctx),
+		IsActive:   true,
+	}
+	err = s.usr.DeactivateOldAndCreateSession(service, &usersSession)
+	if err != nil {
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Couldn't create a session", ErrBase: err}
+	}
+	answer.ListProjects = projectMap
+	//create TOKEN----------------------------------------------------
+	refreshToken, err := utils.CreateRefreshToken(usersSession.ID.Hex(), s.config.RefreshTokenSecret, 19)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token", ErrBase: err}
 	}
-	groupMap, err := s.usr.GetGroupUser(service, input.Domain, phone.UserID)
+	if s.config.ShortJwt {
+		answer.RefreshToken = utils.RemoveFirstPart(refreshToken)
+	} else {
+		answer.RefreshToken = refreshToken
+	}
+	//-----------------------------------------------------------------
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token", ErrBase: err}
 	}
-	answer.GroupId = groupMap
-	//answer.RefreshToken = tokens.RefreshToken
-	answer.AccessToken = tokens.AccessToken
+
 	return answer, nil
 }
 
-func (s *ServiceAuth) PhoneValidUserReg(ctx *gin.Context, input schemesAuth.PhoneValidUserReg) (schemesAuth.AnswerToken, error) {
-	var answer schemesAuth.AnswerToken
+func (s *ServiceAuth) PhoneLoginFlow(ctx *gin.Context, input DTO.PhoneValidUserReg) (DTO.AnswerRegToken, error) {
 	//TODO.MD:  нет проверки КАПЧИ
+	var answer DTO.AnswerRegToken
+
 	service, err := helpers.CheckDomain(s.config, input.Domain)
 	if err != nil {
 		return answer, err
 	}
+
 	number, err := strconv.ParseInt(input.Phone, 10, 64)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad phone", ErrBase: err}
 	}
+
 	UserID, hashedPassword, err := s.ath.GetPhoneUserID(service, number)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -171,44 +207,41 @@ func (s *ServiceAuth) PhoneValidUserReg(ctx *gin.Context, input schemesAuth.Phon
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "Invalid username or password", ErrBase: err}
 	}
 
-	err = helpers.FillJWTTokens(&answer, UserID.Hex(), []string{input.Domain}, s.config, 0, 0)
+	projectMap, err := s.pr.GetProjectsListByUser(service, input.Domain, UserID)
+	if err != nil {
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Couldn't create a project", ErrBase: err}
+	}
+
+	expiresAt := time.Now().Add(time.Minute * time.Duration(20))
+	usersSession := entitiesDB.MdUsersSession{
+		DeviceId:   "_",
+		DeviceType: common.GetDeviceType(ctx),
+		UserID:     UserID,
+		Domain:     "*******",
+		CreatedAt:  time.Now(),
+		ExpiresAt:  expiresAt,
+		IP:         common.GetClientIP(ctx),
+		IsActive:   true,
+	}
+	err = s.usr.DeactivateOldAndCreateSession(service, &usersSession)
+	if err != nil {
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Couldn't create a session", ErrBase: err}
+	}
+	answer.ListProjects = projectMap
+	//create TOKEN----------------------------------------------------
+	refreshToken, err := utils.CreateRefreshToken(usersSession.ID.Hex(), s.config.RefreshTokenSecret, 19)
+	if err != nil {
+		return answer, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token", ErrBase: err}
+	}
+	if s.config.ShortJwt {
+		answer.RefreshToken = utils.RemoveFirstPart(refreshToken)
+	} else {
+		answer.RefreshToken = refreshToken
+	}
+	//-----------------------------------------------------------------
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token", ErrBase: err}
 	}
 
 	return answer, nil
 }
-
-//
-//func (s *ServiceAuth) RefreshTokenUserFlow(ctx *gin.Context, input schemesAuth.ValidRefresh) (schemesAuth.AnswerToken, error) {
-//	var token schemesAuth.AnswerToken
-//	//
-//	//authorized, _ := utils.IsAuthorized(input.RefreshToken, s.config.RefreshTokenSecret)
-//	//if !authorized {
-//	//	return token, &schemes.ErrorResponse{Code: 98, Err: "Not authorized"}
-//	//
-//	//}
-//	//
-//	//var userID, err = utils.ExtractToken(input.RefreshToken, s.config.RefreshTokenSecret)
-//	//if err != nil {
-//	//	return token, &schemes.ErrorResponse{Code: 98, Err: "Not find User"}
-//	//}
-//	//
-//	//err = s.ath.GetUuidUser(userID)
-//	//if err != nil {
-//	//	return token, &schemes.ErrorResponse{Code: 105, Err: "User not found"}
-//	//}
-//	//
-//	//accessToken, err := utils.CreateAccessToken(userID, s.config.AccessTokenSecret, s.config.AccessTokenHour)
-//	//if err != nil {
-//	//	return token, &schemes.ErrorResponse{Code: 96, Err: "Couldn't create a token"}
-//	//}
-//	//
-//	//refreshToken, err := utils.CreateRefreshToken(userID, s.config.RefreshTokenSecret, s.config.AccessTokenHour)
-//	//if err != nil {
-//	//	return token, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token"}
-//	//}
-//	//token.AccessToken = accessToken
-//	//token.RefreshToken = refreshToken
-//	return token, nil
-//}

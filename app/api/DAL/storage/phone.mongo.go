@@ -57,7 +57,7 @@ func (r *RepositoryMongoAuthPhone) SaveSmsAuth(service string, sms *entitiesDB.M
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
 		sms.ID = oid
 	} else {
-		return fmt.Errorf("Bad ObjectID in SaveSmsAuth")
+		return fmt.Errorf("unexpected type of InsertedID in SaveSmsAuth")
 	}
 	return nil
 }
