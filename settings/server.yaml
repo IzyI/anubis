@@ -1,7 +1,0 @@
-server:
-  phone:
-    - postman
-    - my_site
-  oauth:
-    - postman
-

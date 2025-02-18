@@ -29,5 +29,8 @@ type HTTPError struct {
 }
 
 func (e *ErrorResponse) Error() string {
+	if e.ErrBase == nil {
+		return "ErrorResponse == nil"
+	}
 	return "" + e.Err + "(Code " + strconv.Itoa(e.Code) + ")  // " + e.ErrBase.Error()
 }

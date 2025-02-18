@@ -2,14 +2,15 @@ package main
 
 import (
 	"anubis/app/core"
-	"anubis/app/core/helpers"
+	"anubis/app/core/common"
 	"anubis/app/core/middlewares"
 	v1 "anubis/app/routes/v1"
-	"anubis/tools/databace/psql"
+	dtb "anubis/tools/dtb/mongo"
 	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -21,7 +22,8 @@ import (
 
 func main() {
 	config := core.ServiceConfig{}
-	config.ReadConfig("settings/.env", "settings/server.yaml")
+	config.ReadConfig("config/.env", "config/server.yaml")
+	fmt.Printf("\nCONFIG: %+v\n\n", config.ListServices)
 	/**
 	* ========================
 	*  Setup db
@@ -31,7 +33,7 @@ func main() {
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		validate = v
-		err := validate.RegisterValidation("phone", helpers.ValidatePhone)
+		err := validate.RegisterValidation("phone", common.ValidatePhone)
 		if err != nil {
 			log.Fatalf("CRITICAL: validate error: %v", err)
 		}
@@ -39,19 +41,22 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	databaseUrl := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
-		config.PgUsername,
-		config.PgPassword,
-		config.PgHost,
-		config.PgPort,
-		config.PgDatabase,
-	)
-	pgStore, err := psql.NewClient(ctx, 5, 3*time.Second, databaseUrl, false)
+
+	database, err := dtb.NewClientMongo(
+		ctx,
+		5,
+		5*time.Second,
+		fmt.Sprintf(
+			"mongodb://%s:%s@%s:%s/%s?authSource=admin&retryWrites=true&w=majority",
+			config.MoUsername,
+			url.QueryEscape(config.MoPassword),
+			config.MoHost,
+			config.MoPort,
+			config.NameApp), 100)
 	if err != nil {
 		log.Fatalf("CRITICAL: ", "unexpected error while tried to connect to database.md: %v\n", err)
 	}
-	defer pgStore.Close()
+	defer dtb.CloseMongoDBConnection(database)
 
 	/**
 	* ========================
@@ -76,19 +81,23 @@ func main() {
 		AllowHeaders:    []string{"Content-Type", "Authorization", "Accept-Encoding"},
 	}))
 
-	app.Use(middlewares.RequestID(nil))
-	app.Use(gin.LoggerWithConfig(helpers.GetLoggerConfig(nil, nil, nil)))
+	app.Use(gin.LoggerWithConfig(common.GetLoggerConfig(nil, nil, nil)))
 	/**
 	* ========================
 	* Initialize All Route
 	* ========================
 	 */
+
+	// Первая группа маршрутов для версии 1
+
 	app.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
-	v1.NewRouteUser(pgStore, app, config)
+	auth := app.Group("/auth")
+	v1.NewRoutePhoneAuth(database, auth, config)
+	v1.NewRouteToken(database, auth, config)
 
 	protectedRouter := app.Group("/check_auth")
-	protectedRouter.Use(middlewares.JwtAuthMiddleware(config.AccessTokenSecret))
-	protectedRouter.GET("/", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "auth"}) })
+	protectedRouter.Use(middlewares.JwtAuthMiddleware(config))
+	protectedRouter.GET("", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "auth"}) })
 
 	start := app.Run(config.AppIp)
 	if start != nil {
