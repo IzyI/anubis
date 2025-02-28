@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"anubis/app/api/interfaces"
+	"anubis/app/api/api/interfaces"
 	"anubis/app/core/handlers"
 	"github.com/gin-gonic/gin"
 )
@@ -16,4 +16,8 @@ func NewControllerToken(tokenUC interfaces.TokenUseCase) *ControllerToken {
 
 func (c *ControllerToken) HandlerRefreshTokenDomainFlowPOST(ctx *gin.Context) {
 	handlers.PostHandler(ctx, c.tokenUC.RefreshTokenDomainFlow)
+}
+
+func (c *ControllerToken) HandlerLogoutDomainFlowPOST(ctx *gin.Context) {
+	handlers.PostHandler(ctx, c.tokenUC.LogoutDomainFlow)
 }
