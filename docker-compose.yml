@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+
+#  clickhouse_anubis_server:
+#    container_name: clickhouse_anubis
+#    image: yandex/clickhouse-server
+#    restart: always
+#    env_file:
+#      - .env.bd
+#    #    volumes:
+#    #      - "./clickhouse_init.sql:/docker-entrypoint-initdb.d/init.sql"
+#    ports:
+#      - "8123:8123"
+#      - "9000:9000"
+#      - "9009:9009"
+#    ulimits:
+#      nproc: 65535
+#      nofile:
+#        soft: 262144
+#        hard: 262144
+
+#  postgres_anubis_server:
+#    image: postgres:latest
+#    container_name: postgres_anubis
+#    restart: always
+#    env_file:
+#      - ./config/.env.bd
+#    ports:
+#      - '5432:5432'
+#    expose:
+#      - "5432"
+#    volumes:
+#      - ./data_bd:/var/lib/psql/data
+
+  mongodb_anubis_server:
+    image: mongo:latest
+    container_name: mongodb_anubis
+    restart: always
+    env_file: ./config/.env
+
+    ports:
+      - 27118:27017
+    volumes:
+      - ./.data_bd:/data/db
+      - ./.data_bd/dev.archive:/Databases/dev.archive
+      - ./.data_bd/production:/Databases/production
+    networks:
+      - mongodb_anubis_network
+
+networks:
+  mongodb_anubis_network:
+    driver: bridge

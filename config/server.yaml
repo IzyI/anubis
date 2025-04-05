@@ -1,0 +1,23 @@
+list_services:
+  anubis:
+    service: anubis
+    role:
+      owner: "O"
+      admin: "A"
+      user: "U"
+      guest: "G"
+    auth:
+      - 'phone'
+      - 'email'
+    webhook:
+      token_revoked: '23432542436345'
+  calcer:
+    service: chanki
+  vector:
+    service: chanki
+name_app:
+  anubis
+short_jwt:
+  true
+short_jwt_value:
+  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
