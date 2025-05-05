@@ -35,7 +35,6 @@ type ServiceConfig struct {
 	RefreshTokenMinute int                     `mapstructure:"REFRESH_TOKEN_MINUTE"`
 	ListServices       map[string]ListServices `mapstructure:"list_services"`
 	NameApp            string                  `mapstructure:"name_app"`
-	ShortJwt           bool                    `mapstructure:"short_jwt"`
 	ShortJwtValue      string                  `mapstructure:"short_jwt_value"`
 }
 

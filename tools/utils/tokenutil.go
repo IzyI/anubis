@@ -78,13 +78,6 @@ func ExtractToken[T jwt.Claims](requestToken string, secret string, claims T) er
 	return nil
 }
 
-func RemoveFirstPart(token string) string {
-	if i := strings.IndexByte(token, '.'); i >= 0 {
-		return token[i+1:]
-	}
-	return token // если точка не найдена
-}
-
 func ParseInfoToken(input string) (string, string, string, error) {
 	// Разбиваем строку по разделителю "|"
 	parts := strings.Split(input, "|")

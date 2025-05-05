@@ -111,7 +111,7 @@ func (s *ServiceAuth) ValidSmsUserFlow(ctx *gin.Context, input *DTO.SmsValid) (D
 	phoneNum, err := s.ath.SmsValidUser(ctx.GetString(middlewares.Service), objectID, input.SmsCode)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return answer, &schemes.ErrorResponse{Code: 105, Err: "User with sms-code not found", ErrBase: err}
+			return answer, &schemes.ErrorResponse{Code: 104, Err: "User with sms-code not found", ErrBase: err}
 		}
 		return answer, err
 	}
@@ -149,7 +149,7 @@ func (s *ServiceAuth) ValidSmsUserFlow(ctx *gin.Context, input *DTO.SmsValid) (D
 	}
 	err = s.usr.DeactivateOldAndCreateSession(ctx.GetString(middlewares.Service), &userSession)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Couldn't create a session", ErrBase: err}
+		return answer, &schemes.ErrorResponse{Code: 107, Err: "Couldn't create a session", ErrBase: err}
 	}
 	answer.ListProjects = projectMap
 	//create TOKEN----------------------------------------------------
@@ -177,13 +177,8 @@ func (s *ServiceAuth) ValidSmsUserFlow(ctx *gin.Context, input *DTO.SmsValid) (D
 		return answer, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token", ErrBase: err}
 	}
 
-	if s.config.ShortJwt {
-		answer.RefreshToken = utils.RemoveFirstPart(refreshToken)
-		answer.AccessToken = utils.RemoveFirstPart(accessToken)
-	} else {
-		answer.RefreshToken = refreshToken
-		answer.AccessToken = accessToken
-	}
+	answer.RefreshToken = refreshToken
+	answer.AccessToken = accessToken
 
 	return answer, nil
 }
@@ -203,7 +198,7 @@ func (s *ServiceAuth) PhoneLoginFlow(ctx *gin.Context, input *DTO.LoginUserValid
 		true)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return answer, &schemes.ErrorResponse{Code: 105, Err: "User not found :(", ErrBase: err}
+			return answer, &schemes.ErrorResponse{Code: 104, Err: "User not found :(", ErrBase: err}
 		} else {
 			return answer, err
 		}
@@ -235,7 +230,7 @@ func (s *ServiceAuth) PhoneLoginFlow(ctx *gin.Context, input *DTO.LoginUserValid
 	}
 	err = s.usr.CheckOldAndUpdateSession(ctx.GetString(middlewares.Service), &userSession)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Couldn't create a session", ErrBase: err}
+		return answer, &schemes.ErrorResponse{Code: 107, Err: "Couldn't create a session", ErrBase: err}
 	}
 	answer.ListProjects = projectMap
 	//create TOKEN----------------------------------------------------
@@ -263,12 +258,7 @@ func (s *ServiceAuth) PhoneLoginFlow(ctx *gin.Context, input *DTO.LoginUserValid
 		return answer, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token", ErrBase: err}
 	}
 
-	if s.config.ShortJwt {
-		answer.RefreshToken = utils.RemoveFirstPart(refreshToken)
-		answer.AccessToken = utils.RemoveFirstPart(accessToken)
-	} else {
-		answer.RefreshToken = refreshToken
-		answer.AccessToken = accessToken
-	}
+	answer.RefreshToken = refreshToken
+	answer.AccessToken = accessToken
 	return answer, nil
 }

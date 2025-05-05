@@ -50,14 +50,14 @@ func (s *ServiceToken) RefreshTokenDomainFlow(ctx *gin.Context, input *DTO.Refre
 		return answer, &schemes.ErrorResponse{Code: 107, Err: "Couldn't find session", ErrBase: err}
 	}
 	if time.Now().After(userSession.ExpiresAt) {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Token has expired", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 97, Err: "Token has expired", ErrBase: nil}
 	}
 
 	if userSession.HashToken != hashToken {
 		if userSession.IsActive == true {
 			_ = s.usr.UserSessionsSetActive(ctx.GetString(middlewares.Service), userSession.ID, false)
 		}
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad Token hash", ErrBase: err}
+		return answer, &schemes.ErrorResponse{Code: 97, Err: "Bad Token hash", ErrBase: err}
 	}
 
 	if !userSession.IsActive {
@@ -76,7 +76,7 @@ func (s *ServiceToken) RefreshTokenDomainFlow(ctx *gin.Context, input *DTO.Refre
 
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return answer, &schemes.ErrorResponse{Code: 105, Err: "Not found project for user ", ErrBase: err}
+			return answer, &schemes.ErrorResponse{Code: 104, Err: "Not found project for user ", ErrBase: err}
 		}
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad projectID", ErrBase: err}
 	}
@@ -107,13 +107,8 @@ func (s *ServiceToken) RefreshTokenDomainFlow(ctx *gin.Context, input *DTO.Refre
 		return answer, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token", ErrBase: err}
 	}
 
-	if s.config.ShortJwt {
-		answer.RefreshToken = utils.RemoveFirstPart(refreshToken)
-		answer.AccessToken = utils.RemoveFirstPart(accessToken)
-	} else {
-		answer.RefreshToken = refreshToken
-		answer.AccessToken = accessToken
-	}
+	answer.RefreshToken = refreshToken
+	answer.AccessToken = accessToken
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 97, Err: "Couldn't create a token", ErrBase: err}
 	}
@@ -138,11 +133,11 @@ func (s *ServiceToken) LogoutDomainFlow(ctx *gin.Context, input *DTO.LogoutValid
 		return answer, &schemes.ErrorResponse{Code: 107, Err: "Couldn't find session", ErrBase: err}
 	}
 	if time.Now().After(userSession.ExpiresAt) {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Token has expired", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 97, Err: "Token has expired", ErrBase: nil}
 	}
 
 	if userSession.HashToken != hashToken {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad Token hash", ErrBase: err}
+		return answer, &schemes.ErrorResponse{Code: 97, Err: "Bad Token hash", ErrBase: err}
 	}
 	if !userSession.IsActive {
 		if err != nil {

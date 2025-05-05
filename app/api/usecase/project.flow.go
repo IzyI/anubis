@@ -35,7 +35,7 @@ func (s *ServiceProject) GetProjectsFlow(ctx *gin.Context, input *common.Empty) 
 	var answer DTO.AnswerProjectList
 	objectUserID, err := primitive.ObjectIDFromHex(ctx.GetString(middlewares.UserIDKey))
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad user id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad user id", ErrBase: nil}
 	}
 	projectMap, err := s.pr.GetProjectsListByUser(
 		ctx.GetString(middlewares.Service),
@@ -52,7 +52,7 @@ func (s *ServiceProject) PostProjectsFlow(ctx *gin.Context, input *DTO.CreatePro
 
 	objectUserID, err := primitive.ObjectIDFromHex(ctx.GetString(middlewares.UserIDKey))
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad user id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad user id", ErrBase: nil}
 	}
 	var projectMember entitiesDB.MdProjectMember
 	var project entitiesDB.MdProject
@@ -76,12 +76,12 @@ func (s *ServiceProject) UpdateProjectsFlow(ctx *gin.Context, uri *DTO.UriIDVali
 	var answer common.Empty
 	objectUserID, err := primitive.ObjectIDFromHex(ctx.GetString(middlewares.UserIDKey))
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad user id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad user id", ErrBase: nil}
 	}
 
 	projectID, err := primitive.ObjectIDFromHex(uri.ID)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad project id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad project id", ErrBase: nil}
 	}
 	var projectMember entitiesDB.MdProjectMember
 	var project entitiesDB.MdProject
@@ -102,12 +102,12 @@ func (s *ServiceProject) DelProjectsFlow(ctx *gin.Context, uri *DTO.UriIDValid) 
 	var answer common.Empty
 	objectUserID, err := primitive.ObjectIDFromHex(ctx.GetString(middlewares.UserIDKey))
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad user id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad user id", ErrBase: nil}
 	}
 
 	projectID, err := primitive.ObjectIDFromHex(uri.ID)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad project id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad project id", ErrBase: nil}
 	}
 	var projectMember entitiesDB.MdProjectMember
 	var project entitiesDB.MdProject

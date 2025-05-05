@@ -20,8 +20,8 @@
 # Go workspace file
 go.work
 .idea
-.env
-.env.bd
+tmp/.env.bd
 tmp
 sqlc.yaml
-http_requests/http-client.env.json
+config_server.env
+config_server.yaml

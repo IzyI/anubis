@@ -8,13 +8,13 @@ import (
 	dtb "anubis/tools/dtb/mongo"
 	"context"
 	"fmt"
+	"github.com/gin-contrib/gzip"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -22,7 +22,7 @@ import (
 
 func main() {
 	config := core.ServiceConfig{}
-	config.ReadConfig("config/.env", "config/server.yaml")
+	config.ReadConfig("config_server.env", "config_server.yaml")
 	fmt.Printf("\nCONFIG: %+v\n\n", config)
 	/**
 	* ========================
@@ -62,7 +62,7 @@ func main() {
 			config.MoPort,
 			config.NameApp), 100)
 	if err != nil {
-		log.Fatalf("CRITICAL: ", "unexpected error while tried to connect to database.md: %v\n", err)
+		log.Fatalf("CRITICAL: ", "unexpected error while tried to connect to database_pg.md: %v\n", err)
 	}
 	defer dtb.CloseMongoDBConnection(database)
 
@@ -82,7 +82,7 @@ func main() {
 	}
 
 	// Initialize all middleware here
-	app.Use(gzip.Gzip(gzip.BestCompression))
+
 	app.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 		AllowMethods:    []string{"GET", "POST", "DELETE", "PATCH", "PUT", "OPTIONS"},
@@ -91,6 +91,7 @@ func main() {
 
 	app.Use(gin.LoggerWithConfig(common.GetLoggerConfig(nil, nil, nil)))
 	app.Use(middlewares.DomainMiddleware(config))
+	app.Use(gzip.Gzip(gzip.BestCompression))
 
 	// ROUTS -----------------------------------------------------------------------------------------------------------
 	app.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })

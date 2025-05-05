@@ -31,9 +31,6 @@ func RefreshAuthMiddleware(config core.ServiceConfig) gin.HandlerFunc {
 			}
 		}
 
-		if config.ShortJwt {
-			refreshToken = config.ShortJwtValue + "." + refreshToken
-		}
 		// Validate the token
 		authorized, _ := utils.IsAuthorized(refreshToken, config.RefreshTokenSecret)
 		if authorized {

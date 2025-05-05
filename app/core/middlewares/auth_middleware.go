@@ -33,9 +33,6 @@ func JwtAuthMiddleware(config core.ServiceConfig) gin.HandlerFunc {
 			}
 		}
 
-		if config.ShortJwt {
-			authToken = config.ShortJwtValue + "." + authToken
-		}
 		// Validate the token
 		authorized, _ := utils.IsAuthorized(authToken, config.AccessTokenSecret)
 		if authorized {

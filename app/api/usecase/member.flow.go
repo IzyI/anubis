@@ -37,11 +37,11 @@ func (s *ServiceProjectMembers) GetProjectMembersFlow(ctx *gin.Context, input *D
 	userId := ctx.GetString(middlewares.UserIDKey)
 	objectID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad user id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad user id", ErrBase: nil}
 	}
 	projectID, err := primitive.ObjectIDFromHex(input.ID)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad project id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad project id", ErrBase: nil}
 	}
 	var project entitiesDB.MdProject
 	project.ID = projectID
@@ -70,7 +70,7 @@ func (s *ServiceProjectMembers) GetProjectMembersFlow(ctx *gin.Context, input *D
 		fmt.Printf("member.UserID  %v \n", member.UserID)
 		user, exists := usersMap[member.UserID]
 		if !exists {
-			return answer, &schemes.ErrorResponse{Code: 105, Err: fmt.Sprintf("Member %s not found", member.UserID.Hex())}
+			return answer, &schemes.ErrorResponse{Code: 104, Err: fmt.Sprintf("Member %s not found", member.UserID.Hex())}
 		}
 
 		memberAnswer = append(memberAnswer, DTO.AnswerMembers{
@@ -93,15 +93,15 @@ func (s *ServiceProjectMembers) PostProjectMembersFlow(
 
 	ownerID, err := primitive.ObjectIDFromHex(ctx.GetString(middlewares.UserIDKey))
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad owner id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad owner id", ErrBase: nil}
 	}
 	userID, err := primitive.ObjectIDFromHex(body.UserID)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad user id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad user id", ErrBase: nil}
 	}
 	projectID, err := primitive.ObjectIDFromHex(uri.ID)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad project id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad project id", ErrBase: nil}
 	}
 	if body.Role == s.config.ListServices[ctx.GetString(middlewares.Domain)].Role["owner"] {
 		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad role", ErrBase: nil}
@@ -115,7 +115,7 @@ func (s *ServiceProjectMembers) PostProjectMembersFlow(
 	err = s.usr.GetUserByID(
 		ctx.GetString(middlewares.Service), &user)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Not found user", ErrBase: err}
+		return answer, &schemes.ErrorResponse{Code: 104, Err: "Not found user", ErrBase: err}
 	}
 	err = s.pr.AddMemberToProject(
 		ctx.GetString(middlewares.Service), ctx.GetString(middlewares.Domain), projectID, ownerID, userID, body.Role)
@@ -133,21 +133,21 @@ func (s *ServiceProjectMembers) PutProjectMembersFlow(ctx *gin.Context, uri *DTO
 
 	ownerID, err := primitive.ObjectIDFromHex(ctx.GetString(middlewares.UserIDKey))
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad owner id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad owner id", ErrBase: nil}
 	}
 	userID, err := primitive.ObjectIDFromHex(body.UserID)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad user id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad user id", ErrBase: nil}
 	}
 	projectID, err := primitive.ObjectIDFromHex(uri.ID)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad project id", ErrBase: nil}
 	}
 	if ownerID == userID {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "owner == user", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "owner == user", ErrBase: nil}
 	}
 	if body.Role == s.config.ListServices[ctx.GetString(middlewares.Domain)].Role["owner"] {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad role", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad role", ErrBase: nil}
 	}
 	if body.Role == "" {
 		body.Role = s.config.ListServices[ctx.GetString(middlewares.Domain)].Role["user"]
@@ -158,7 +158,7 @@ func (s *ServiceProjectMembers) PutProjectMembersFlow(ctx *gin.Context, uri *DTO
 	err = s.usr.GetUserByID(
 		ctx.GetString(middlewares.Service), &user)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Not found user", ErrBase: err}
+		return answer, &schemes.ErrorResponse{Code: 104, Err: "Not found user", ErrBase: err}
 	}
 
 	err = s.pr.UpdateMemberRole(
@@ -183,18 +183,18 @@ func (s *ServiceProjectMembers) DelProjectMembersFlow(ctx *gin.Context, uri *DTO
 
 	ownerID, err := primitive.ObjectIDFromHex(ctx.GetString(middlewares.UserIDKey))
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad owner id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad owner id", ErrBase: nil}
 	}
 	userID, err := primitive.ObjectIDFromHex(body.UserID)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad user id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad user id", ErrBase: nil}
 	}
 	projectID, err := primitive.ObjectIDFromHex(uri.ID)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "Bad project id", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad project id", ErrBase: nil}
 	}
 	if ownerID == userID {
-		return answer, &schemes.ErrorResponse{Code: 107, Err: "owner == user", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "owner == user", ErrBase: nil}
 	}
 
 	err = s.pr.RemoveMemberFromProject(

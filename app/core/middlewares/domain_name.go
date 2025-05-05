@@ -15,6 +15,7 @@ const (
 )
 
 func CheckDomain(s core.ServiceConfig, d string) (string, error) {
+	println(d)
 	domain, ok := s.ListServices[d]
 	if !ok {
 		return "", &schemes.HTTPError{Code: 104, Err: "Domain not found"}
@@ -34,7 +35,13 @@ func DomainMiddleware(config core.ServiceConfig) gin.HandlerFunc {
 		domain := c.Request.Header.Get("Domain")
 		if domain == "" {
 			host := strings.Split(c.Request.Host, ".")
-			domain = host[0]
+			ll := len(host)
+			if ll < 2 {
+				domain = host[0]
+			} else {
+				domain = host[ll-2]
+			}
+
 		}
 		service, err := CheckDomain(config, domain)
 		if err != nil {

@@ -1,6 +1,6 @@
 list_services:
   anubis:
-    service: anubis
+    service: chanki
     role:
       owner: "O"
       admin: "A"
@@ -12,9 +12,9 @@ list_services:
     webhook:
       token_revoked: '23432542436345'
   calcer:
-    service: chanki
+    service: chankidssd
   vector:
-    service: chanki
+    service: chankidsds
 name_app:
   anubis
 short_jwt:
