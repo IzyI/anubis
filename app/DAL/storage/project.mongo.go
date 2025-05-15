@@ -311,7 +311,7 @@ func (r *RepositoryMongoProjects) GetProjectsListByUser(service string, domain s
 
 	if len(userProjects) == 0 {
 		var userProject entitiesDB.MdProject
-		userProject.Name = "PRJ-" + service + "_" + utils.RandStringBytes(7)
+		userProject.Name = "PRJ_" + service + "_" + utils.RandStringBytes(7)
 		userProject.Domain = domain
 		userProject.Members = []entitiesDB.MdProjectMember{
 			{
@@ -338,7 +338,7 @@ func (r *RepositoryMongoProjects) GetProjectsListByUser(service string, domain s
 	// Формируем карту для возврата с именами проектов и их ID
 	result := make(map[string]string)
 	for _, project := range userProjects {
-		result[project.Name] = project.ID.Hex()
+		result[project.ID.Hex()] = project.Name
 	}
 
 	return result, nil

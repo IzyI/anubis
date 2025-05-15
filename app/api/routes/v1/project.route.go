@@ -5,6 +5,7 @@ import (
 	"anubis/app/api/controllers"
 	"anubis/app/api/usecase"
 	"anubis/app/core"
+	"anubis/app/core/middlewares"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -22,11 +23,12 @@ func NewRouteProject(db *mongo.Client, app *gin.RouterGroup, config core.Service
 	route := app.Group("")
 
 	route.GET("", handler.HandlerGETProjects)
-	route.POST("", handler.HandlerPOSTProjects)
-	route.DELETE("/:id", handler.HandlerDELProjects)
-	route.PUT("/:id", handler.HandlerPUTProjects)
-	route.GET("/:id", handler2.HandlerGETProjectMembers)
-	route.POST("/:id/member", handler2.HandlerPOSTProjectMembers)
-	route.PUT("/:id/member", handler2.HandlerPUTProjectMembers)
-	route.DELETE("/:id/member", handler2.HandlerDELProjectMembers)
+	//TODO: у меня при создании проджекта есть возможность создать проджекты с одинаковым именем
+	route.POST("", middlewares.CheckOnceMiddleware(), handler.HandlerPOSTProjects)
+	route.DELETE("/:id", middlewares.CheckOnceMiddleware(), handler.HandlerDELProjects)
+	route.PUT("/:id", middlewares.CheckOnceMiddleware(), handler.HandlerPUTProjects)
+	route.GET("/:id", middlewares.CheckOnceMiddleware(), handler2.HandlerGETProjectMembers)
+	route.POST("/:id/member", middlewares.CheckOnceMiddleware(), handler2.HandlerPOSTProjectMembers)
+	route.PUT("/:id/member", middlewares.CheckOnceMiddleware(), handler2.HandlerPUTProjectMembers)
+	route.DELETE("/:id/member", middlewares.CheckOnceMiddleware(), handler2.HandlerDELProjectMembers)
 }

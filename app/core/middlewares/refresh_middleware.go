@@ -18,10 +18,10 @@ func RefreshAuthMiddleware(config core.ServiceConfig) gin.HandlerFunc {
 		var refreshToken string
 
 		// First, check if the token is present in cookies
-		if cookie, err := c.Cookie("Token"); err == nil {
+		if cookie, err := c.Cookie("Authorization"); err == nil {
 			refreshToken = cookie
 		} else {
-			refreshToken = c.Request.Header.Get("Token")
+			refreshToken = c.Request.Header.Get("Authorization")
 			if len(refreshToken) == 0 {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, schemes.HTTPError{
 					Code: 99,

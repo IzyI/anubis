@@ -89,14 +89,18 @@ func main() {
 		AllowHeaders:    []string{"Content-Type", "Authorization", "Accept-Encoding"},
 	}))
 
+	app.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
+
 	app.Use(gin.LoggerWithConfig(common.GetLoggerConfig(nil, nil, nil)))
 	app.Use(middlewares.DomainMiddleware(config))
 	app.Use(gzip.Gzip(gzip.BestCompression))
 
 	// ROUTS -----------------------------------------------------------------------------------------------------------
-	app.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
+
 	auth := app.Group("/auth")
 	routes.NewRoutePhoneAuth(database, auth, config)
+	routes.NewRouteEmailAuth(database, auth, config)
+
 	auth.Use(middlewares.RefreshAuthMiddleware(config))
 	routes.NewRouteToken(database, auth, config)
 
@@ -104,9 +108,9 @@ func main() {
 	project.Use(middlewares.JwtAuthMiddleware(config))
 	routes.NewRouteProject(database, project, config)
 
-	protectedRouter := app.Group("/check_auth")
+	protectedRouter := app.Group("/ping_auth")
 	protectedRouter.Use(middlewares.JwtAuthMiddleware(config))
-	protectedRouter.GET("", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "auth"}) })
+	protectedRouter.GET("", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) })
 	// -----------------------------------------------------------------------------------------------------------------
 	start := app.Run(config.AppIp)
 	if start != nil {

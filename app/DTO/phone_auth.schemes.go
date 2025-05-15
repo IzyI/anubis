@@ -7,7 +7,7 @@ type PhoneUserRegValid struct {
 	Nickname string `json:"nickname"  binding:"omitempty,safe_text,min=3,max=64"`
 }
 
-type LoginUserValid struct {
+type LoginPhoneUserValid struct {
 	Phone    string `json:"phone"  binding:"required,phone=8,e164"`
 	Password string `json:"password"  binding:"required,min=8,max=64,containsany=!@#$%^&*"`
 	DeviceId string `json:"device_id"  binding:"required,min=12,max=64"`
@@ -15,7 +15,7 @@ type LoginUserValid struct {
 	Nickname string `json:"nickname"  binding:"omitempty,safe_text,min=3,max=64"`
 }
 
-type AnswerUserReg struct {
+type AnswerUserRegSms struct {
 	SmsId string `json:"sms_id"`
 }
 type SmsValid struct {

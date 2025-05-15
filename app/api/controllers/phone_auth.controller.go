@@ -6,22 +6,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ControllerAuth struct {
+type ControllerPhoneAuth struct {
 	authUC interfaces.AuthPhoneUseCase
 }
 
-func NewControllerAuth(authUC interfaces.AuthPhoneUseCase) *ControllerAuth {
-	return &ControllerAuth{authUC: authUC}
+func NewControllerPhoneAuth(authUC interfaces.AuthPhoneUseCase) *ControllerPhoneAuth {
+	return &ControllerPhoneAuth{authUC: authUC}
 }
 
-func (c *ControllerAuth) HandlerPOSTReg(ctx *gin.Context) {
-	handlers.JsonHandler(ctx, c.authUC.RegUserFlow)
+func (c *ControllerPhoneAuth) HandlerPOSTReg(ctx *gin.Context) {
+	handlers.JsonHandler(ctx, c.authUC.RegUserPhoneFlow)
 }
 
-func (c *ControllerAuth) HandlerPOSTValidSms(ctx *gin.Context) {
+func (c *ControllerPhoneAuth) HandlerPOSTValidSms(ctx *gin.Context) {
 	handlers.JsonHandler(ctx, c.authUC.ValidSmsUserFlow)
 }
 
-func (c *ControllerAuth) HandlerPOSTLogin(ctx *gin.Context) {
+func (c *ControllerPhoneAuth) HandlerPOSTPhoneLogin(ctx *gin.Context) {
 	handlers.JsonHandler(ctx, c.authUC.PhoneLoginFlow)
 }

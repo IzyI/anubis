@@ -22,8 +22,7 @@ name_app: # удалить
   anubis
 short_jwt:  # короткий ли jwt 
   true
-short_jwt_value:
-  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9  # первая часть jwt 
+
 
 
 ```

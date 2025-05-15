@@ -1,6 +1,17 @@
 list_services:
-  anubis:
-    service: chanki
+  chanki:
+    service: yocha
+    once: true
+    role:
+      owner: "O"
+    auth:
+      - 'phone'
+      - 'email'
+    webhook:
+      token_revoked: '23432542436345'
+  yocha:
+    service: yocha
+    once: true
     role:
       owner: "O"
       admin: "A"
@@ -9,15 +20,10 @@ list_services:
     auth:
       - 'phone'
       - 'email'
-    webhook:
-      token_revoked: '23432542436345'
-  calcer:
-    service: chankidssd
   vector:
-    service: chankidsds
+    service: di
 name_app:
   anubis
 short_jwt:
   true
-short_jwt_value:
-  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+

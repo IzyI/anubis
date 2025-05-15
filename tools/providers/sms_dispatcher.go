@@ -1,8 +1,8 @@
-package sms
+package providers
 
 import "fmt"
 
-func Sender(s string) (string, string, error) {
+func SenderSms(s string) (string, string, error) {
 	//TODO.MD: написать отправку sms
 	//TODO.MD: написать обработку что потдерживаем покачто только +7 (россию)
 	//TODO.MD: понять как можно сделать защиту от большого количества отправки смс

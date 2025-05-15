@@ -5,7 +5,6 @@ import (
 	interfacesDB2 "anubis/app/DAL/interfacesDB"
 	storage2 "anubis/app/DAL/storage"
 	"anubis/app/DTO"
-	"anubis/app/api/helpers"
 	"anubis/app/core"
 	"anubis/app/core/common"
 	"anubis/app/core/middlewares"
@@ -17,23 +16,22 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
-	"strconv"
 	"time"
 )
 
-type ServicePhoneAuth struct {
+type ServiceEmailAuth struct {
 	usr    interfacesDB2.UserRepository
 	pr     interfacesDB2.ProjectRepository
-	ath    interfacesDB2.AuthPhoneRepository
+	ath    interfacesDB2.AuthEmailRepository
 	config core.ServiceConfig
 }
 
-func NewServicePhoneAuth(
+func NewServiceEmailAuth(
 	usr *storage2.RepositoryMongoUser,
 	pr *storage2.RepositoryMongoProjects,
-	ath *storage2.RepositoryMongoAuthPhone,
-	config core.ServiceConfig) *ServicePhoneAuth {
-	return &ServicePhoneAuth{
+	ath *storage2.RepositoryMongoAuthEmail,
+	config core.ServiceConfig) *ServiceEmailAuth {
+	return &ServiceEmailAuth{
 		usr,
 		pr,
 		ath,
@@ -41,21 +39,20 @@ func NewServicePhoneAuth(
 	}
 }
 
-func (s *ServicePhoneAuth) RegUserPhoneFlow(ctx *gin.Context, input *DTO.PhoneUserRegValid) (DTO.AnswerUserRegSms, error) {
+func (s *ServiceEmailAuth) RegUserEmailFlow(ctx *gin.Context, input *DTO.EmailUserRegValid) (DTO.AnswerUserRegCode, error) {
 	//TODO.MD:  нет проверки КАПЧИ
-	var answer DTO.AnswerUserRegSms
+	var answer DTO.AnswerUserRegCode
 
 	//
-	var phone = &entitiesDB2.MdPhoneAuth{}
-	err := helpers.FillPhoneReg(phone, input)
-	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad phone", ErrBase: err}
-	}
+	var email = &entitiesDB2.MdEmailAuth{}
 
-	err = s.ath.GetPhone(ctx.GetString(middlewares.Service), phone)
+	email.Email = input.Email
+	email.PasswordHash, _ = utils.GeneratePasswordHash(input.Password)
+	email.Verification = false
+	err := s.ath.GetEmail(ctx.GetString(middlewares.Service), email)
 	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad phone for user", ErrBase: err}
-	} else if phone.Verification != false {
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad email for user", ErrBase: err}
+	} else if email.Verification != false {
 		return answer, &schemes.ErrorResponse{Code: 109, Err: "The user already exists", ErrBase: err}
 	}
 
@@ -66,72 +63,73 @@ func (s *ServicePhoneAuth) RegUserPhoneFlow(ctx *gin.Context, input *DTO.PhoneUs
 		user.Nickname = "name_" + utils.RandStringBytes(10)
 	}
 
-	if phone.UserID.IsZero() {
+	if email.UserID.IsZero() {
 		err = s.usr.CreateUser(ctx.GetString(middlewares.Service), &user)
 		if err != nil {
 			return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad Req", ErrBase: err}
 		}
-		phone.UserID = user.ID
+		email.UserID = user.ID
 	}
 
-	err = s.ath.SavePhone(ctx.GetString(middlewares.Service), phone)
+	err = s.ath.SaveEmail(ctx.GetString(middlewares.Service), email)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 109, Err: "Not save phone", ErrBase: err}
 	}
-	if phone.Verification == true {
-		return answer, &schemes.ErrorResponse{Code: 109, Err: "The phone already exists", ErrBase: err}
+	if email.Verification == true {
+		return answer, &schemes.ErrorResponse{Code: 109, Err: "The email already exists", ErrBase: err}
 	}
 
-	var mySms entitiesDB2.MdSmsAuth
-	mySms.SmsCode = utils.RandStringBytes(6)
-	mySms.IDSend, mySms.SmsService, err = providers.SenderSms(mySms.SmsCode)
-	mySms.Phone = phone.Phone
-	mySms.UserID = phone.UserID
-	err = s.ath.SaveSmsAuth(ctx.GetString(middlewares.Service), &mySms)
+	var myEmailCode entitiesDB2.MdEmailCodeAuth
+	myEmailCode.EmailCode = utils.RandStringBytes(6)
+	myEmailCode.IDSend, myEmailCode.EmailService, err = providers.SenderEmail(myEmailCode.EmailCode)
+	myEmailCode.Email = email.Email
+	myEmailCode.UserID = email.UserID
+
+	err = s.ath.SaveEmailAuth(ctx.GetString(middlewares.Service), &myEmailCode)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad sms", ErrBase: err}
 	}
-	answer.SmsId = mySms.ID.Hex()
+	answer.CodeId = myEmailCode.ID.Hex()
 	return answer, nil
 }
 
-func (s *ServicePhoneAuth) ValidSmsUserFlow(ctx *gin.Context, input *DTO.SmsValid) (DTO.AnswerRegToken, error) {
+func (s *ServiceEmailAuth) ValidCodeEmailUserFlow(ctx *gin.Context, input *DTO.CodeEmailValid) (DTO.AnswerRegToken, error) {
 	var answer DTO.AnswerRegToken
 
-	objectID, err := primitive.ObjectIDFromHex(input.SmsId)
+	objectID, err := primitive.ObjectIDFromHex(input.CodeId)
 	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad SmsId", ErrBase: err}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad EmailCodeId", ErrBase: err}
 	}
 
 	tenMinutesAgo := time.Now().Add(-10 * time.Minute)
 	if !objectID.Timestamp().After(tenMinutesAgo) {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "The time for the SMS code has expired.", ErrBase: nil}
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "The time for the Email code has expired.", ErrBase: nil}
 	}
 
-	phoneNum, err := s.ath.SmsValidUser(ctx.GetString(middlewares.Service), objectID, input.SmsCode)
+	mail, err := s.ath.EmailCodeValidUser(ctx.GetString(middlewares.Service), objectID, input.EmailCode)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return answer, &schemes.ErrorResponse{Code: 104, Err: "User with sms-code not found", ErrBase: err}
+			return answer, &schemes.ErrorResponse{Code: 104, Err: "User with email-code not found", ErrBase: err}
 		}
 		return answer, err
 	}
 
-	var phone = &entitiesDB2.MdPhoneAuth{}
-	phone.Phone = phoneNum
-	err = s.ath.GetPhone(ctx.GetString(middlewares.Service), phone)
+	var email = &entitiesDB2.MdEmailAuth{}
+	email.Email = mail
+	err = s.ath.GetEmail(ctx.GetString(middlewares.Service), email)
 
 	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad phone for user", ErrBase: err}
-	} else if phone.Verification != false {
+		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad email for user", ErrBase: err}
+	} else if email.Verification != false {
 		return answer, &schemes.ErrorResponse{Code: 109, Err: "The user already exists", ErrBase: err}
 	}
 
-	err = s.ath.SaveVerifyPhone(ctx.GetString(middlewares.Service), true, phone.Phone)
+	err = s.ath.SaveVerifyEmail(ctx.GetString(middlewares.Service), true, email.Email)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 109, Err: "Not save verification", ErrBase: err}
 	}
 
-	projectMap, err := s.pr.GetProjectsListByUser(ctx.GetString(middlewares.Service), ctx.GetString(middlewares.Domain), phone.UserID)
+	projectMap, err := s.pr.GetProjectsListByUser(ctx.GetString(middlewares.Service), ctx.GetString(middlewares.Domain), email.UserID)
 	if err != nil {
 		return answer, &schemes.ErrorResponse{Code: 105, Err: "Couldn't create a project", ErrBase: err}
 	}
@@ -140,7 +138,7 @@ func (s *ServicePhoneAuth) ValidSmsUserFlow(ctx *gin.Context, input *DTO.SmsVali
 	userSession := entitiesDB2.MdUsersSession{
 		DeviceId:   input.DeviceId,
 		DeviceType: common.GetDeviceType(ctx),
-		UserID:     phone.UserID,
+		UserID:     email.UserID,
 		Domain:     ctx.GetString(middlewares.Domain),
 		CreatedAt:  time.Now(),
 		ExpiresAt:  expiresAt,
@@ -183,18 +181,13 @@ func (s *ServicePhoneAuth) ValidSmsUserFlow(ctx *gin.Context, input *DTO.SmsVali
 	return answer, nil
 }
 
-func (s *ServicePhoneAuth) PhoneLoginFlow(ctx *gin.Context, input *DTO.LoginPhoneUserValid) (DTO.AnswerRegToken, error) {
+func (s *ServiceEmailAuth) EmailLoginFlow(ctx *gin.Context, input *DTO.LoginEmailUserValid) (DTO.AnswerRegToken, error) {
 	//TODO.MD:  нет проверки КАПЧИ
 	var answer DTO.AnswerRegToken
 
-	number, err := strconv.ParseInt(input.Phone, 10, 64)
-	if err != nil {
-		return answer, &schemes.ErrorResponse{Code: 105, Err: "Bad phone", ErrBase: err}
-	}
-
-	UserID, hashedPassword, err := s.ath.GetPhoneVerificationUserID(
+	UserID, hashedPassword, err := s.ath.GetEmailVerificationUserID(
 		ctx.GetString(middlewares.Service),
-		number,
+		input.Email,
 		true)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {

@@ -9,6 +9,7 @@ type Webhook struct {
 
 type ListServices struct {
 	Service string            `mapstructure:"service"`
+	Once    bool              `mapstructure:"once"`
 	Webhook Webhook           `mapstructure:"webhook"`
 	Auth    []string          `mapstructure:"auth"`
 	Role    map[string]string `mapstructure:"role"`
@@ -35,7 +36,6 @@ type ServiceConfig struct {
 	RefreshTokenMinute int                     `mapstructure:"REFRESH_TOKEN_MINUTE"`
 	ListServices       map[string]ListServices `mapstructure:"list_services"`
 	NameApp            string                  `mapstructure:"name_app"`
-	ShortJwtValue      string                  `mapstructure:"short_jwt_value"`
 }
 
 func (s *ServiceConfig) ReadConfig(pathEnv string, pathYaml string) {
